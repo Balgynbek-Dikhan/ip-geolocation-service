@@ -1,21 +1,28 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.api.routes import router as geo_router
+from app.config import get_settings
 from app.errors import AppError, ErrorResponse
-from app.services.providers import FakeGeoProvider, GeoProvider
+from app.services.ip_api_provider import IpApiProvider
+from app.services.providers import GeoProvider
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    provider: GeoProvider = FakeGeoProvider()
+    settings = get_settings()
+    client = httpx.AsyncClient(timeout=settings.http_timeout_seconds)
+    provider: GeoProvider = IpApiProvider(client, settings.ip_api_base_url)
     if not isinstance(provider, GeoProvider):
         raise RuntimeError("Geolocation provider failed to initialize.")
+    app.state.http_client = client
     app.state.geo_provider = provider
     yield
+    await client.aclose()
 
 
 app = FastAPI(

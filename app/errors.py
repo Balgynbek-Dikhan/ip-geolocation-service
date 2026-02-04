@@ -41,12 +41,12 @@ class InvalidIPError(AppError):
 
 
 class NotFoundError(AppError):
-    def __init__(self, ip: str) -> None:
+    def __init__(self, ip: str, reason: str | None = None) -> None:
         super().__init__(
             status_code=404,
             code="ip_not_found",
             message="IP address not found.",
-            details={"ip": ip},
+            details={"ip": ip, "reason": reason} if reason else {"ip": ip},
         )
 
 

@@ -1,12 +1,13 @@
 import httpx
 import pytest
+import respx
 
 from app.errors import InvalidIPError, NotFoundError, RateLimitError, UpstreamError
 from app.services.ip_api_provider import IpApiProvider
 
 
 @pytest.mark.asyncio
-async def test_ip_api_provider_success(respx_mock) -> None:
+async def test_ip_api_provider_success(respx_mock: respx.MockRouter) -> None:
     payload = {
         "status": "success",
         "query": "8.8.8.8",
@@ -32,7 +33,7 @@ async def test_ip_api_provider_success(respx_mock) -> None:
 
 
 @pytest.mark.asyncio
-async def test_ip_api_provider_invalid_query(respx_mock) -> None:
+async def test_ip_api_provider_invalid_query(respx_mock: respx.MockRouter) -> None:
     respx_mock.get("http://ip-api.com/json/999").mock(
         return_value=httpx.Response(200, json={"status": "fail", "message": "invalid query"})
     )
@@ -44,7 +45,7 @@ async def test_ip_api_provider_invalid_query(respx_mock) -> None:
 
 
 @pytest.mark.asyncio
-async def test_ip_api_provider_not_found(respx_mock) -> None:
+async def test_ip_api_provider_not_found(respx_mock: respx.MockRouter) -> None:
     respx_mock.get("http://ip-api.com/json/203.0.113.1").mock(
         return_value=httpx.Response(200, json={"status": "fail", "message": "private range"})
     )
@@ -56,10 +57,8 @@ async def test_ip_api_provider_not_found(respx_mock) -> None:
 
 
 @pytest.mark.asyncio
-async def test_ip_api_provider_rate_limited(respx_mock) -> None:
-    respx_mock.get("http://ip-api.com/json/8.8.4.4").mock(
-        return_value=httpx.Response(429)
-    )
+async def test_ip_api_provider_rate_limited(respx_mock: respx.MockRouter) -> None:
+    respx_mock.get("http://ip-api.com/json/8.8.4.4").mock(return_value=httpx.Response(429))
 
     async with httpx.AsyncClient() as client:
         provider = IpApiProvider(client, "http://ip-api.com")
@@ -68,7 +67,7 @@ async def test_ip_api_provider_rate_limited(respx_mock) -> None:
 
 
 @pytest.mark.asyncio
-async def test_ip_api_provider_timeout(respx_mock) -> None:
+async def test_ip_api_provider_timeout(respx_mock: respx.MockRouter) -> None:
     respx_mock.get("http://ip-api.com/json/1.1.1.1").mock(
         side_effect=httpx.TimeoutException("timeout")
     )

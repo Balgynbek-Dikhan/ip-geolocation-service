@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Request
 
 from app.dependencies import get_geo_service
@@ -21,7 +23,7 @@ router = APIRouter(prefix="/v1", tags=["geolocation"])
     summary="Lookup geolocation for a specific IP address",
 )
 async def geo_by_ip(
-    ip: str, service: GeoService = Depends(get_geo_service)
+    ip: str, service: Annotated[GeoService, Depends(get_geo_service)]
 ) -> GeoResponse:
     return await service.lookup_ip(ip)
 
@@ -38,7 +40,7 @@ async def geo_by_ip(
     summary="Lookup geolocation for the requesting client IP",
 )
 async def geo_for_client(
-    request: Request, service: GeoService = Depends(get_geo_service)
+    request: Request, service: Annotated[GeoService, Depends(get_geo_service)]
 ) -> GeoResponse:
     ip = get_request_ip(request)
     return await service.lookup_ip(ip)

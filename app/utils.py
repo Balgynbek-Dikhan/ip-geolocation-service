@@ -1,4 +1,5 @@
 import ipaddress
+from typing import cast
 
 from fastapi import Request
 
@@ -12,11 +13,12 @@ def validate_ip(value: str) -> bool:
 
 
 def get_request_ip(request: Request) -> str:
-    forwarded_for = request.headers.get("x-forwarded-for")
+    forwarded_for = cast(str | None, request.headers.get("x-forwarded-for"))
     if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
+        return cast(str, forwarded_for.split(",")[0].strip())
 
-    if request.client is None:
+    client = request.client
+    if client is None or client.host is None:
         return ""
 
-    return request.client.host
+    return str(client.host)

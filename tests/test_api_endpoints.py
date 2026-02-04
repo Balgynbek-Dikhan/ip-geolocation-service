@@ -1,9 +1,10 @@
 import httpx
 import pytest
+import respx
 
 
 @pytest.mark.asyncio
-async def test_geo_by_ip(async_client, respx_mock) -> None:
+async def test_geo_by_ip(async_client: httpx.AsyncClient, respx_mock: respx.MockRouter) -> None:
     payload = {
         "status": "success",
         "query": "8.8.8.8",
@@ -26,7 +27,9 @@ async def test_geo_by_ip(async_client, respx_mock) -> None:
 
 
 @pytest.mark.asyncio
-async def test_geo_for_client_uses_forwarded_for(async_client, respx_mock) -> None:
+async def test_geo_for_client_uses_forwarded_for(
+    async_client: httpx.AsyncClient, respx_mock: respx.MockRouter
+) -> None:
     payload = {
         "status": "success",
         "query": "1.1.1.1",
@@ -42,16 +45,14 @@ async def test_geo_for_client_uses_forwarded_for(async_client, respx_mock) -> No
         return_value=httpx.Response(200, json=payload)
     )
 
-    response = await async_client.get(
-        "/v1/geo", headers={"x-forwarded-for": "1.1.1.1"}
-    )
+    response = await async_client.get("/v1/geo", headers={"x-forwarded-for": "1.1.1.1"})
 
     assert response.status_code == 200
     assert response.json()["ip"] == "1.1.1.1"
 
 
 @pytest.mark.asyncio
-async def test_geo_by_ip_invalid(async_client) -> None:
+async def test_geo_by_ip_invalid(async_client: httpx.AsyncClient) -> None:
     response = await async_client.get("/v1/geo/not-an-ip")
 
     assert response.status_code == 400

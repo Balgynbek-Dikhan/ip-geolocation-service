@@ -2,8 +2,8 @@ from app.errors import InvalidIPError
 from app.models import GeoResponse
 from app.services.providers import GeoProvider
 from app.utils import validate_ip
- 
- 
+
+
 class GeoService:
     def __init__(self, provider: GeoProvider) -> None:
         self._provider = provider

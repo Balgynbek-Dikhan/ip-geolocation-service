@@ -1,0 +1,213 @@
+openapi: 3.1.0
+info:
+  title: IP Geolocation Service
+  description: FastAPI microservice that returns geolocation data for a given IP address
+    or the requesting client.
+  version: 1.0.0
+paths:
+  /v1/geo/{ip}:
+    get:
+      tags:
+      - Geolocation API
+      summary: Lookup geolocation for a specific IP address
+      operationId: geo_by_ip_v1_geo__ip__get
+      parameters:
+      - name: ip
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ip
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeoResponse'
+        '400':
+          description: Invalid IP address.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: IP not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limited by provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Upstream provider failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/geo:
+    get:
+      tags:
+      - Geolocation API
+      summary: Lookup geolocation for the requesting client IP
+      operationId: geo_for_client_v1_geo_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeoResponse'
+        '400':
+          description: Invalid IP address.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: IP not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limited by provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Upstream provider failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ErrorDetail:
+      properties:
+        code:
+          type: string
+          title: Code
+          description: Stable error code for programmatic handling.
+        message:
+          type: string
+          title: Message
+          description: Human-readable error message.
+        details:
+          anyOf:
+          - {}
+          - type: 'null'
+          title: Details
+          description: Optional details for debugging or client display.
+      type: object
+      required:
+      - code
+      - message
+      title: ErrorDetail
+    ErrorResponse:
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      type: object
+      required:
+      - error
+      title: ErrorResponse
+    GeoResponse:
+      properties:
+        ip:
+          type: string
+          title: Ip
+          description: The IP address that was looked up.
+        country:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Country
+          description: Country name.
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+          description: Region or state.
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+          description: City name.
+        latitude:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Latitude
+          description: Latitude coordinate.
+        longitude:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Longitude
+          description: Longitude coordinate.
+        timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timezone
+          description: Timezone identifier.
+        isp:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Isp
+          description: Internet service provider.
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+          description: Upstream provider identifier.
+      type: object
+      required:
+      - ip
+      title: GeoResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError

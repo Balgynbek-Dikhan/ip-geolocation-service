@@ -10,6 +10,4 @@ class GeoResponse(BaseModel):
     longitude: float | None = Field(default=None, description="Longitude coordinate.")
     timezone: str | None = Field(default=None, description="Timezone identifier.")
     isp: str | None = Field(default=None, description="Internet service provider.")
-    source: str | None = Field(
-        default=None, description="Upstream provider identifier."
-    )
+    source: str | None = Field(default=None, description="Upstream provider identifier.")
